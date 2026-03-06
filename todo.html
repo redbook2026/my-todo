@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>할일 관리</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue-0: #f0f7ff;
+      --blue-1: #daeeff;
+      --blue-2: #b3d9ff;
+      --blue-3: #7bbcf7;
+      --blue-4: #4a9de0;
+      --blue-5: #2b7fc7;
+      --text-main: #1a2e42;
+      --text-muted: #7a9ab8;
+      --bg: #f5faff;
+      --white: #ffffff;
+      --radius: 14px;
+      --shadow: 0 4px 24px rgba(74,157,224,0.10);
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 60px 16px 80px;
+      color: var(--text-main);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 40px;
+      animation: fadeDown 0.5s ease both;
+    }
+    .header-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--blue-4);
+      margin-bottom: 8px;
+    }
+    .header h1 {
+      font-size: 32px;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      color: var(--text-main);
+      line-height: 1.1;
+    }
+    .header h1 span {
+      font-weight: 500;
+      color: var(--blue-5);
+    }
+
+    /* Stats */
+    .stats {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 32px;
+      animation: fadeDown 0.5s 0.1s ease both;
+    }
+    .stat {
+      flex: 1;
+      background: var(--white);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--blue-1);
+    }
+    .stat-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 26px;
+      font-weight: 400;
+      color: var(--blue-5);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* Input */
+    .input-wrap {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--blue-1);
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 6px 6px 6px 20px;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      animation: fadeDown 0.5s 0.2s ease both;
+    }
+    .input-wrap:focus-within {
+      border-color: var(--blue-3);
+      box-shadow: 0 4px 24px rgba(74,157,224,0.18);
+    }
+    .input-wrap input {
+      flex: 1;
+      border: none;
+      outline: none;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-size: 15px;
+      color: var(--text-main);
+      background: transparent;
+      font-weight: 400;
+      caret-color: var(--blue-4);
+    }
+    .input-wrap input::placeholder { color: var(--blue-2); }
+    .add-btn {
+      background: var(--blue-5);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      white-space: nowrap;
+      letter-spacing: 0.02em;
+    }
+    .add-btn:hover { background: var(--blue-4); }
+    .add-btn:active { transform: scale(0.97); }
+
+    /* Filter */
+    .filter {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+      animation: fadeDown 0.5s 0.25s ease both;
+    }
+    .filter-btn {
+      background: none;
+      border: 1px solid var(--blue-1);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-family: 'Noto Sans KR', sans-serif;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .filter-btn.active {
+      background: var(--blue-5);
+      border-color: var(--blue-5);
+      color: #fff;
+    }
+    .filter-btn:not(.active):hover {
+      border-color: var(--blue-3);
+      color: var(--blue-5);
+    }
+
+    /* List */
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: fadeDown 0.5s 0.3s ease both;
+    }
+
+    .todo-item {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--blue-1);
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      gap: 14px;
+      transition: opacity 0.2s, transform 0.2s, border-color 0.2s;
+      animation: slideIn 0.25s ease both;
+    }
+    .todo-item.done {
+      border-color: var(--blue-2);
+      background: var(--blue-0);
+    }
+    .todo-item:hover { border-color: var(--blue-2); }
+
+    /* Checkbox */
+    .check-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--blue-3);
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.18s, border-color 0.18s;
+      position: relative;
+    }
+    .check-btn:hover { border-color: var(--blue-5); }
+    .check-btn.checked {
+      background: var(--blue-5);
+      border-color: var(--blue-5);
+    }
+    .check-btn svg {
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.15s, transform 0.15s;
+    }
+    .check-btn.checked svg {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .todo-text {
+      flex: 1;
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--text-main);
+      transition: color 0.2s;
+      word-break: break-all;
+    }
+    .done .todo-text {
+      color: var(--text-muted);
+      text-decoration: line-through;
+      text-decoration-color: var(--blue-3);
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      color: var(--blue-2);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s, background 0.15s;
+      flex-shrink: 0;
+    }
+    .del-btn:hover { color: #e05a5a; background: #fff0f0; }
+
+    /* Empty state */
+    .empty {
+      text-align: center;
+      padding: 48px 0 32px;
+      color: var(--blue-3);
+      display: none;
+    }
+    .empty.show { display: block; }
+    .empty svg { margin-bottom: 12px; opacity: 0.5; }
+    .empty p { font-size: 14px; color: var(--text-muted); }
+
+    /* Animations */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="header-label">My Tasks</div>
+    <h1>오늘의 <span>할일</span></h1>
+  </header>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-num" id="stat-total">0</div>
+      <div class="stat-label">전체 할일</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-done">0</div>
+      <div class="stat-label">완료</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-remain">0</div>
+      <div class="stat-label">남은 할일</div>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <input type="text" id="todo-input" placeholder="새 할일을 입력하세요..." maxlength="80" />
+    <button class="add-btn" onclick="addTodo()">추가</button>
+  </div>
+
+  <div class="filter">
+    <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">전체</button>
+    <button class="filter-btn" data-filter="active" onclick="setFilter('active', this)">진행중</button>
+    <button class="filter-btn" data-filter="done" onclick="setFilter('done', this)">완료</button>
+  </div>
+
+  <div class="todo-list" id="todo-list"></div>
+
+  <div class="empty" id="empty">
+    <svg width="40" height="40" fill="none" viewBox="0 0 40 40">
+      <circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="2"/>
+      <path d="M14 20h12M20 14v12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <p>할일이 없습니다. 새로운 할일을 추가해보세요!</p>
+  </div>
+
+</div>
+
+<script>
+  let todos = JSON.parse(localStorage.getItem('todos') || '[]');
+  let filter = 'all';
+
+  function save() { localStorage.setItem('todos', JSON.stringify(todos)); }
+
+  function addTodo() {
+    const input = document.getElementById('todo-input');
+    const text = input.value.trim();
+    if (!text) { input.focus(); return; }
+    todos.unshift({ id: Date.now(), text, done: false });
+    save(); render(); input.value = ''; input.focus();
+  }
+
+  function toggle(id) {
+    const t = todos.find(t => t.id === id);
+    if (t) { t.done = !t.done; save(); render(); }
+  }
+
+  function remove(id) {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateX(20px)';
+      setTimeout(() => { todos = todos.filter(t => t.id !== id); save(); render(); }, 200);
+    }
+  }
+
+  function setFilter(f, btn) {
+    filter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    render();
+  }
+
+  function render() {
+    const total = todos.length;
+    const done = todos.filter(t => t.done).length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-done').textContent = done;
+    document.getElementById('stat-remain').textContent = total - done;
+
+    const list = document.getElementById('todo-list');
+    const empty = document.getElementById('empty');
+    const filtered = todos.filter(t =>
+      filter === 'all' ? true : filter === 'done' ? t.done : !t.done
+    );
+
+    list.innerHTML = filtered.map(t => `
+      <div class="todo-item${t.done ? ' done' : ''}" data-id="${t.id}">
+        <button class="check-btn${t.done ? ' checked' : ''}" onclick="toggle(${t.id})" title="완료 토글">
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+            <path d="M1 5l3.5 3.5L11 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <span class="todo-text">${escapeHtml(t.text)}</span>
+        <button class="del-btn" onclick="remove(${t.id})" title="삭제">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    `).join('');
+
+    const show = filtered.length === 0;
+    empty.classList.toggle('show', show);
+    empty.querySelector('p').textContent =
+      filter === 'done' ? '완료된 할일이 없습니다.' :
+      filter === 'active' ? '진행중인 할일이 없습니다.' :
+      '할일을 추가해보세요!';
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('todo-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') addTodo();
+  });
+
+  render();
+</script>
+</body>
+</html>
